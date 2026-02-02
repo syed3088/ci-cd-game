@@ -37,7 +37,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    echo "Server IP is: ${SERVER_IP}"
+                    echo "Server IP: ${SERVER_IP}"
                 }
             }
         }
@@ -60,25 +60,19 @@ pipeline {
 
         stage('Deploy Website') {
             steps {
-                sh '''
-                echo "Current Directory:"
-                pwd
-                echo "Listing files:"
-                ls -la
-                echo "Listing website folder:"
-                ls -la website
-                '''
 
                 sh """
+                echo "Copying website files..."
                 scp -i ${KEY_PATH} -o StrictHostKeyChecking=no website/* \
                 ubuntu@${SERVER_IP}:/tmp/
                 """
 
                 sh """
+                echo "Replacing default nginx page..."
                 ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
-                sudo mv /tmp/*.html /var/www/html/ &&
-                sudo mv /tmp/*.css /var/www/html/ &&
-                sudo mv /tmp/*.js /var/www/html/"
+                sudo rm -f /var/www/html/index.nginx-debian.html &&
+                sudo rm -f /var/www/html/index.html &&
+                sudo mv /tmp/* /var/www/html/"
                 """
             }
         }
