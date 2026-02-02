@@ -36,57 +36,61 @@ pipeline {
                         script: "cd terraform && terraform output -raw public_ip",
                         returnStdout: true
                     ).trim()
+
+                    echo "Server IP is: ${SERVER_IP}"
                 }
             }
         }
 
         stage('Wait for EC2') {
             steps {
+                echo "Waiting for EC2 to initialize..."
                 sh 'sleep 60'
             }
         }
 
         stage('Install Nginx') {
             steps {
-                sh '''
+                sh """
                 ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} \
-                "sudo apt update && sudo apt install nginx -y"
-                '''
+                "sudo apt update && sudo apt install -y nginx"
+                """
             }
         }
 
-        stage('Deploy Game') {
+        stage('Deploy Website') {
             steps {
                 sh '''
+                echo "Current Directory:"
+                pwd
+                echo "Listing files:"
+                ls -la
+                echo "Listing website folder:"
+                ls -la website
+                '''
+
+                sh """
                 scp -i ${KEY_PATH} -o StrictHostKeyChecking=no website/* \
                 ubuntu@${SERVER_IP}:/tmp/
-    steps {
-        sh '''
-        pwd
-        ls -la
-        ls -la website || true
-        '''
-        
-        sh '''
-        scp -i ${KEY_PATH} -o StrictHostKeyChecking=no ./website/* \
-        ubuntu@${SERVER_IP}:/tmp/
-        '''
+                """
 
-        sh '''
-        ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
-        sudo mv /tmp/*.html /var/www/html/
-        sudo mv /tmp/*.css /var/www/html/
-        sudo mv /tmp/*.js /var/www/html/"
-        '''
-    }
-}
-
+                sh """
                 ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
-                sudo mv /tmp/*.html /var/www/html/
-                sudo mv /tmp/*.css /var/www/html/
+                sudo mv /tmp/*.html /var/www/html/ &&
+                sudo mv /tmp/*.css /var/www/html/ &&
                 sudo mv /tmp/*.js /var/www/html/"
-                '''
+                """
             }
         }
-
     }
+
+    post {
+        success {
+            echo "🎉 Deployment Successful!"
+            echo "Open in browser: http://${SERVER_IP}"
+        }
+        failure {
+            echo "❌ Deployment Failed. Check logs."
+        }
+    }
+}
