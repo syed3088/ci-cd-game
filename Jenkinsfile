@@ -56,18 +56,27 @@ pipeline {
         }
 
         stage('Deploy Game') {
-            steps {
-                sh '''
-                scp -i ${KEY_PATH} -o StrictHostKeyChecking=no website/* \
-                ubuntu@${SERVER_IP}:/tmp/
+    steps {
+        sh '''
+        pwd
+        ls -la
+        ls -la website || true
+        '''
+        
+        sh '''
+        scp -i ${KEY_PATH} -o StrictHostKeyChecking=no ./website/* \
+        ubuntu@${SERVER_IP}:/tmp/
+        '''
 
-                ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
-                sudo mv /tmp/*.html /var/www/html/
-                sudo mv /tmp/*.css /var/www/html/
-                sudo mv /tmp/*.js /var/www/html/"
-                '''
-            }
-        }
+        sh '''
+        ssh -i ${KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+        sudo mv /tmp/*.html /var/www/html/
+        sudo mv /tmp/*.css /var/www/html/
+        sudo mv /tmp/*.js /var/www/html/"
+        '''
+    }
+}
+
 
     }
 
