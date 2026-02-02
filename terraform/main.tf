@@ -7,7 +7,7 @@ resource "aws_instance" "web" {
   instance_type = "t2.micro"
   key_name      = "jenkins-kp"
 
-  vpc_security_group_ids = ["sg-052f7ae062a320b6f"]
+  vpc_security_group_ids = ["sg-06ac50c2a3379052d"]
 
   tags = {
     Name = "jenkins-game-server"
